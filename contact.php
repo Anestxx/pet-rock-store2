@@ -1,18 +1,28 @@
-<?php include 'pets.php';
+<?php
+include 'db.php';
+
+// fetch pets from database
+$pets_query = "SELECT * FROM pets";
+$pets_result = mysqli_query($conn, $pets_query);
+
+$message = "";
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $name = $_POST['name'];
     $email = $_POST['email'];
     $age = $_POST['age'];
-    $pet = $_POST['pet'];
+    $pet_id = $_POST['pet'];
     $reason = $_POST['reason'];
 
-    $entry = "Name: $name | Email: $email | Age: $age | Pet: $pet | Color: $color | Reason: $reason\n";
-    file_put_contents('orders.txt', $entry, FILE_APPEND);
+    $sql = "INSERT INTO adoption_requests (user_name, email, pet_id, message)
+            VALUES ('$name', '$email', '$pet_id', '$reason')";
 
-    $message = "Thank you for adopting $pet!";
+    if(mysqli_query($conn, $sql)){
+        $message = "Thank you! Your adoption request has been submitted.";
+    } else {
+        $message = "Error submitting request.";
+    }
 }
-
 ?>
 <!DOCTYPE html>
 <html>
@@ -21,6 +31,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <header>
     <h1>Stone Pet Shop</h1>
     <nav>
@@ -33,6 +44,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
 <section class="adopt-form">
     <h2>Adopt a Stone Pet</h2>
+
     <?php if($message) echo "<p class='success'>$message</p>"; ?>
 
     <form method="post" action="">
@@ -47,11 +59,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
         <label>Choose Pet:</label>
         <select name="pet" required>
-            <?php foreach($stone_pets as $pet): ?>
-                <option><?php echo $pet['name']; ?></option>
-            <?php endforeach; ?>
+            <?php while($pet = mysqli_fetch_assoc($pets_result)): ?>
+                <option value="<?php echo $pet['id']; ?>">
+                    <?php echo $pet['name']; ?>
+                </option>
+            <?php endwhile; ?>
         </select>
-
 
         <label>Why do you want this pet?</label>
         <textarea name="reason" required></textarea>
